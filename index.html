@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="bn">
+<html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Pixelora - Advanced AI Photo Editor</title>
@@ -13,13 +13,13 @@
 
 /* ===== Before / After demo ===== */
 .demo-section{margin:42px auto;text-align:center}.demo-section h3{color:#aabbd1;margin-bottom:16px;font-size:1.35rem}
-.demo-container{position:relative;width:100%;max-width:420px;aspect-ratio:4/5;margin:20px auto;border-radius:20px;overflow:hidden;border:3px solid #3b82f6;box-shadow:0 10px 30px #000a;background:#000;--cycle:6.5s}
+.demo-container{position:relative;width:100%;max-width:420px;aspect-ratio:4/5;margin:20px auto;border-radius:20px;overflow:hidden;border:3px solid #3b82f6;box-shadow:0 10px 30px #000a;background:#000;--cycle:6.5s;touch-action:pan-y;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;cursor:ew-resize}
 .demo-img{position:absolute;inset:0;background-size:cover;background-position:center top}
 .img-before{filter:brightness(.1) grayscale(.9) contrast(.9)}
-.img-after{filter:brightness(1.06) saturate(1.25) contrast(1.06);clip-path:inset(0 0 0 100%);animation:reveal var(--cycle) ease-in-out infinite}
-.after-glow{position:absolute;inset:0;pointer-events:none;background:radial-gradient(120% 90% at 70% 20%,#ffd7e633,transparent 60%);mix-blend-mode:screen;clip-path:inset(0 0 0 100%);animation:reveal var(--cycle) ease-in-out infinite}
-.slider-line{position:absolute;top:0;bottom:0;left:100%;width:4px;margin-left:-2px;background:var(--cyan);box-shadow:0 0 18px 3px var(--cyan);animation:line var(--cycle) ease-in-out infinite;z-index:5}
-.slider-button{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:42px;height:42px;background:var(--cyan);border-radius:50%;display:grid;place-items:center;color:#0f172a}
+.img-after{filter:brightness(1.06) saturate(1.25) contrast(1.06);clip-path:inset(0 0 0 var(--dpos,100%));will-change:clip-path}
+.after-glow{position:absolute;inset:0;pointer-events:none;background:radial-gradient(120% 90% at 70% 20%,#ffd7e633,transparent 60%);mix-blend-mode:screen;clip-path:inset(0 0 0 var(--dpos,100%))}
+.slider-line{position:absolute;top:0;bottom:0;left:var(--dpos,100%);width:4px;margin-left:-2px;background:var(--cyan);box-shadow:0 0 18px 3px var(--cyan);z-index:5;touch-action:none}
+.slider-button{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:42px;height:42px;background:var(--cyan);border-radius:50%;display:grid;place-items:center;color:#0f172a;touch-action:none;cursor:grab}
 .demo-tag{position:absolute;top:14px;z-index:10;background:#020617cc;border:1px solid #ffffff22;padding:7px 16px;border-radius:30px;font-weight:700;font-size:.9rem;letter-spacing:.5px}
 .tag-before{left:14px;color:#cbd5e1}.tag-after{right:14px;color:var(--cyan)}
 @keyframes reveal{0%,10%{clip-path:inset(0 0 0 100%)}45%,60%{clip-path:inset(0 0 0 0%)}95%,100%{clip-path:inset(0 0 0 100%)}}
@@ -60,6 +60,23 @@
 .pxs-ftabs{display:flex;gap:8px;flex-wrap:wrap}.pxs-ftabs .pxs-tab{background:#334155;padding:8px 18px}.pxs-ftabs .pxs-tab.on{background:var(--blue)}
 @media(max-width:600px){.pxs-thumb{width:64px;height:64px;border-radius:15px}.pxs-cmp{border-radius:18px}.pxs-title{margin-top:48px}}
 @media(prefers-reduced-motion:reduce){.pxs-wrap *,.pxs-modal,.pxs-dialog{transition:none!important}}
+/* ===== Added: slider polish, AI processing effects ===== */
+.demo-container.dragging,.demo-container.dragging .slider-button{cursor:grabbing}
+.pxs-handle{touch-action:none;cursor:ew-resize}
+.pxs-note.err{pointer-events:auto;cursor:pointer;color:#fca5a5;white-space:normal;width:max-content;max-width:88%;text-align:center}
+.tool-btn:disabled{opacity:.5;cursor:not-allowed;pointer-events:none}
+#ai-fx{position:absolute;display:none;pointer-events:none;z-index:8}
+#ai-status{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);z-index:9;display:none;align-items:center;gap:10px;max-width:92%;padding:9px 16px;border-radius:30px;background:#020617d9;border:1px solid #ffffff22;color:#e2e8f0;font-size:.85rem;font-weight:600;pointer-events:none;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+#ai-status.show{display:flex}#ai-status.err{color:#fca5a5}#ai-status.err .ai-spin,#ai-status.err .ai-bar{display:none}
+.ai-spin{flex:none;width:16px;height:16px;border-radius:50%;border:2px solid #334155;border-top-color:var(--cyan);animation:spin .9s linear infinite}
+.ai-bar{flex:none;width:70px;height:4px;border-radius:4px;background:#334155;overflow:hidden}.ai-bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#38bdf8,#2563eb);transition:width .2s}.ai-bar.indet i{width:40%;animation:aibar 1.1s ease-in-out infinite}
+@keyframes aibar{0%{transform:translateX(-100%)}100%{transform:translateX(250%)}}
+#reveal-wrap{position:absolute;z-index:7;pointer-events:none;overflow:hidden}
+.reveal-layer{position:absolute;inset:0;background-color:#0b1222;background-image:linear-gradient(45deg,#1b2740 25%,transparent 25%),linear-gradient(-45deg,#1b2740 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#1b2740 75%),linear-gradient(-45deg,transparent 75%,#1b2740 75%);background-size:20px 20px}
+.reveal-layer img{position:absolute;inset:0;width:100%;height:100%;display:block;-webkit-user-drag:none}
+.reveal-line{position:absolute;top:0;bottom:0;width:3px;margin-left:-1.5px;background:#fff;box-shadow:0 0 14px 3px #38bdf8,0 0 4px #fff}
+#ai-bg-prompt{width:100%;min-height:70px;background:#1e293b;color:white;border:1px solid #475569;border-radius:9px;padding:10px;resize:vertical}
+
 </style>
 </head>
 <body>
@@ -83,22 +100,27 @@
 <section id="editor-screen">
 <div class="editor-topbar"><button class="back-btn" id="back-btn"><i class="fa-solid fa-arrow-left"></i> Back</button><div class="editor-heading"><i class="fa-solid fa-wand-magic-sparkles" style="color:#38bdf8"></i> Pixelora Photo Editor</div></div>
 <div class="editor-panel">
-<div class="canvas-container" id="canvas-container"><img id="preview-img" alt="Uploaded photo"><canvas id="brush-canvas"></canvas><div id="crop-overlay"><span class="crop-handle nw" data-handle="nw"></span><span class="crop-handle n" data-handle="n"></span><span class="crop-handle ne" data-handle="ne"></span><span class="crop-handle e" data-handle="e"></span><span class="crop-handle se" data-handle="se"></span><span class="crop-handle s" data-handle="s"></span><span class="crop-handle sw" data-handle="sw"></span><span class="crop-handle w" data-handle="w"></span></div><div id="text-layer"></div><div id="busy-overlay"><div class="spinner"></div><div class="status-note" id="busy-text">অপেক্ষা করুন...</div><div class="progress-wrap"><div class="progress-bar" id="progress-bar"></div></div></div></div>
+<div class="canvas-container" id="canvas-container"><img id="preview-img" alt="Uploaded photo"><canvas id="brush-canvas"></canvas><div id="crop-overlay"><span class="crop-handle nw" data-handle="nw"></span><span class="crop-handle n" data-handle="n"></span><span class="crop-handle ne" data-handle="ne"></span><span class="crop-handle e" data-handle="e"></span><span class="crop-handle se" data-handle="se"></span><span class="crop-handle s" data-handle="s"></span><span class="crop-handle sw" data-handle="sw"></span><span class="crop-handle w" data-handle="w"></span></div><div id="text-layer"></div><canvas id="ai-fx"></canvas><div id="ai-status" role="status" aria-live="polite"><span class="ai-spin"></span><span id="ai-status-text">AI is removing the background...</span><span class="ai-bar" id="ai-bar"><i id="ai-bar-fill"></i></span></div><div id="busy-overlay"><div class="spinner"></div><div class="status-note" id="busy-text">Please wait...</div><div class="progress-wrap"><div class="progress-bar" id="progress-bar"></div></div></div></div>
 <div class="toolbar" id="toolbar">
 <button class="tool-btn" id="background-btn"><i class="fa-solid fa-user-slash"></i><span>Background removal</span></button>
+<button class="tool-btn" id="ai-bg-btn"><i class="fa-solid fa-image"></i><span>AI Background</span></button>
 <button class="tool-btn" id="crop-btn"><i class="fa-solid fa-crop-simple"></i><span>Crop image</span></button>
 <button class="tool-btn" id="text-btn"><i class="fa-solid fa-font"></i><span>Enter text</span></button>
 <button class="tool-btn" id="brush-btn"><i class="fa-solid fa-paintbrush"></i><span>Cut out unnecessary images</span></button>
 <button class="tool-btn dl" id="download-btn"><i class="fa-solid fa-download"></i><span>Download PNG</span></button>
 </div>
-<div class="control-panel" id="crop-panel"><h3><i class="fa-solid fa-crop-simple"></i> Crop image</h3><p class="status-note">ছবির চারপাশের সাদা Handle আঙুল বা মাউস দিয়ে টেনে প্রয়োজনীয় অংশ নির্বাচন করুন।</p><div class="control-row"><button class="action-btn green" id="apply-crop">Crop selected area</button><button class="action-btn gray" id="cancel-crop">Cancel</button></div></div>
-<div class="control-panel" id="brush-panel"><h3><i class="fa-solid fa-paintbrush"></i> Delete unnecessary photos</h3><div class="control-row"><label for="brush-size">Brush size:</label><input id="brush-size" type="range" min="8" max="90" value="28"><span id="brush-size-value">28 px</span></div><p class="status-note">যে অংশ সরাতে চান সেটির উপর আঙুল বা মাউস দিয়ে লাল দাগ দিন। Remove চাপলে নির্বাচিত অংশে আশপাশের ছবির রঙ ব্যবহার করে blur blend করা হবে। এটি AI inpainting নয়।</p><div class="control-row"><button class="action-btn green" id="remove-object" disabled>Remove</button><button class="action-btn gray" id="clear-brush">Clear marks</button><button class="action-btn gray" id="cancel-brush">Cancel</button></div></div>
-<div class="control-panel" id="text-panel"><h3><i class="fa-solid fa-font"></i> Add Text</h3><textarea id="text-input" placeholder="Enter Text"></textarea><div class="control-row"><button class="font-size-btn" id="thin-text">A</button><button class="font-size-btn" id="thick-text"><b>A</b></button><span class="status-note">লেখার স্টাইল</span><div class="color-list" id="color-list">
-<button class="color-dot selected" data-color="#ffffff" style="background:#fff"></button><button class="color-dot" data-color="#ef4444" style="background:#ef4444"></button><button class="color-dot" data-color="#2563eb" style="background:#2563eb"></button><button class="color-dot" data-color="#facc15" style="background:#facc15"></button><button class="color-dot" data-color="#000000" style="background:#000"></button><button class="color-dot" data-color="#a855f7" style="background:#a855f7"></button><button class="color-dot" data-color="#92400e" style="background:#92400e"></button><button class="color-dot" data-color="#16a34a" style="background:#16a34a"></button><button class="color-dot" data-color="#86efac" style="background:#86efac"></button><button class="color-dot" data-color="#b91c1c" style="background:#b91c1c"></button><button class="color-dot" data-color="#f97316" style="background:#f97316"></button></div></div><div class="control-row"><button class="action-btn green" id="add-text">Add Text</button><button class="action-btn gray" id="close-text">Done</button></div><div class="text-list" id="text-list"></div><p class="status-note">ছবির উপর লেখাটি আঙুল বা মাউস দিয়ে সরাতে পারবেন। পেন্সিল দিয়ে আবার সম্পাদনা করা যাবে।</p></div>
-<div class="control-panel" id="background-panel"><h3><i class="fa-solid fa-user-slash"></i> Background removal</h3><p class="status-note" id="bg-status">ছবির মূল মানুষ/বস্তু রেখে পেছনের ব্যাকগ্রাউন্ড অটোমেটিক মুছে ফেলা হবে।</p><div class="control-row"><button class="action-btn green" id="bg-run">Remove background</button><button class="action-btn gray" id="bg-undo" disabled>Undo</button></div><div class="control-row"><button class="action-btn" id="blur-image">Blur image</button><button class="action-btn gray" id="reset-filter">Reset effects</button></div></div>
+<div class="control-panel" id="crop-panel"><h3><i class="fa-solid fa-crop-simple"></i> Crop image</h3><p class="status-note">Drag the white handles around the image with your finger or mouse to select the area you need.</p><div class="control-row"><button class="action-btn green" id="apply-crop">Crop selected area</button><button class="action-btn gray" id="cancel-crop">Cancel</button></div></div>
+<div class="control-panel" id="brush-panel"><h3><i class="fa-solid fa-paintbrush"></i> Delete unnecessary photos</h3><div class="control-row"><label for="brush-size">Brush size:</label><input id="brush-size" type="range" min="8" max="90" value="28"><span id="brush-size-value">28 px</span></div><p class="status-note">Paint red marks with your finger or mouse over the area you want to remove. When you press Remove, the selected area is blended using blurred colors from the surrounding image. This is not AI inpainting.</p><div class="control-row"><button class="action-btn green" id="remove-object" disabled>Remove</button><button class="action-btn gray" id="clear-brush">Clear marks</button><button class="action-btn gray" id="cancel-brush">Cancel</button></div></div>
+<div class="control-panel" id="text-panel"><h3><i class="fa-solid fa-font"></i> Add Text</h3><textarea id="text-input" placeholder="Enter Text"></textarea><div class="control-row"><button class="font-size-btn" id="thin-text">A</button><button class="font-size-btn" id="thick-text"><b>A</b></button><span class="status-note">Text style</span><div class="color-list" id="color-list">
+<button class="color-dot selected" data-color="#ffffff" style="background:#fff"></button><button class="color-dot" data-color="#ef4444" style="background:#ef4444"></button><button class="color-dot" data-color="#2563eb" style="background:#2563eb"></button><button class="color-dot" data-color="#facc15" style="background:#facc15"></button><button class="color-dot" data-color="#000000" style="background:#000"></button><button class="color-dot" data-color="#a855f7" style="background:#a855f7"></button><button class="color-dot" data-color="#92400e" style="background:#92400e"></button><button class="color-dot" data-color="#16a34a" style="background:#16a34a"></button><button class="color-dot" data-color="#86efac" style="background:#86efac"></button><button class="color-dot" data-color="#b91c1c" style="background:#b91c1c"></button><button class="color-dot" data-color="#f97316" style="background:#f97316"></button></div></div><div class="control-row"><button class="action-btn green" id="add-text">Add Text</button><button class="action-btn gray" id="close-text">Done</button></div><div class="text-list" id="text-list"></div><p class="status-note">You can drag the text over the image with your finger or mouse. Use the pencil icon to edit it again.</p></div>
+<div class="control-panel" id="background-panel"><h3><i class="fa-solid fa-user-slash"></i> Background removal</h3><p class="status-note" id="bg-status">The main subject is kept and the background is removed automatically by AI.</p><div class="control-row"><button class="action-btn green" id="bg-run">Remove background</button><button class="action-btn gray" id="bg-undo" disabled>Undo</button></div><div class="control-row"><button class="action-btn" id="blur-image">Blur image</button><button class="action-btn gray" id="reset-filter">Reset effects</button></div></div>
+<div class="control-panel" id="ai-bg-panel"><h3><i class="fa-solid fa-image"></i> AI Background</h3><p class="status-note" id="ai-bg-status">Describe the new background and AI will place your subject on it.</p><div class="control-row"><textarea id="ai-bg-prompt" maxlength="300" placeholder="Example: a sunny beach with blue sea"></textarea></div><div class="control-row"><button class="action-btn green" id="ai-bg-run">Generate background</button><button class="action-btn gray" id="ai-bg-undo" disabled>Undo</button></div></div>
 </div></section>
 <canvas id="export-canvas"></canvas>
 <script>
+/* Base URL of the Pixelora server. Leave empty when the server serves this page (recommended). */
+const API_BASE='';
+
 /* Loading text animation */
 const loadingTexts=["Remove the back crown.","Blur the image.","Cut out extra things from the picture.","Blur a specific area","Add text to image"];
 const loadingScreen=document.getElementById('loading-screen'),animatedText=document.getElementById('animated-text');let loadingIndex=0;
@@ -115,16 +137,36 @@ const DEMO_IMAGES=[
 ];
 (function(){let i=0;const layers=document.querySelectorAll('.demo-img');function tryLoad(){if(i>=DEMO_IMAGES.length)return;const u=DEMO_IMAGES[i++],t=new Image();t.onload=()=>layers.forEach(l=>l.style.backgroundImage="url('"+u+"')");t.onerror=tryLoad;t.src=u}tryLoad()})();
 
+/* Before/After demo slider: automatic back-and-forth movement + manual touch/mouse control */
+(function(){
+ const box=document.getElementById('demo-container');if(!box)return;
+ const CYCLE=6500,RESUME_DELAY=1800;
+ let pos=100,theta=Math.PI/2,auto=true,dragging=false,offset=0,lastDir=1,resumeTimer=0,last=0,raf=0;
+ function setPos(p){pos=Math.max(0,Math.min(100,p));box.style.setProperty('--dpos',pos+'%')}
+ function pct(x){const r=box.getBoundingClientRect();return(x-r.left)/r.width*100}
+ function tick(now){if(!last)last=now;const dt=Math.min(64,now-last);last=now;if(auto){theta+=dt/CYCLE*2*Math.PI;setPos(50+50*Math.sin(theta))}raf=requestAnimationFrame(tick)}
+ function start(){if(!raf){last=0;raf=requestAnimationFrame(tick)}}
+ function stop(){cancelAnimationFrame(raf);raf=0}
+ function resume(){clearTimeout(resumeTimer);resumeTimer=setTimeout(()=>{const a=Math.asin(Math.max(-1,Math.min(1,(pos-50)/50)));theta=lastDir>=0?a:Math.PI-a;last=0;auto=true},RESUME_DELAY)}
+ box.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse'&&e.button!==0)return;dragging=true;auto=false;clearTimeout(resumeTimer);box.classList.add('dragging');try{box.setPointerCapture(e.pointerId)}catch(_){}const p=pct(e.clientX);offset=(e.target.closest&&e.target.closest('.slider-line'))?pos-p:0;setPos(p+offset);e.preventDefault()});
+ box.addEventListener('pointermove',e=>{if(!dragging)return;const p=pct(e.clientX)+offset;if(p!==pos)lastDir=p>pos?1:-1;setPos(p)});
+ function end(){if(!dragging)return;dragging=false;box.classList.remove('dragging');resume()}
+ ['pointerup','pointercancel','lostpointercapture'].forEach(n=>box.addEventListener(n,end));
+ box.addEventListener('dragstart',e=>e.preventDefault());
+ setPos(100);
+ if('IntersectionObserver' in window)new IntersectionObserver(es=>{es[0].isIntersecting?start():stop()}).observe(box);else start();
+})();
+
 /* Upload and screen switching */
 const mainContent=document.getElementById('main-content'),editorScreen=document.getElementById('editor-screen'),fileInput=document.getElementById('file-input'),previewImg=document.getElementById('preview-img'),canvasContainer=document.getElementById('canvas-container'),brushCanvas=document.getElementById('brush-canvas'),brushCtx=brushCanvas.getContext('2d'),exportCanvas=document.getElementById('export-canvas');
 let originalImage=null,currentFilter='none';
-fileInput.addEventListener('change',e=>{const file=e.target.files&&e.target.files[0];if(!file)return;if(!file.type.startsWith('image/')){alert('Please choose an image file.');return}const reader=new FileReader();reader.onload=ev=>{const img=new Image();img.onload=()=>{originalImage=img;previewImg.src=ev.target.result;currentFilter='none';previewImg.style.filter='none';canvasContainer.classList.remove('transparent');bgBackup=null;mainContent.style.display='none';editorScreen.style.display='block';hideAllPanels();setTimeout(setupCanvas,80);window.scrollTo({top:0,behavior:'smooth'})};img.onerror=()=>alert('ছবিটি খোলা যাচ্ছে না। অন্য ছবি চেষ্টা করুন।');img.src=ev.target.result};reader.readAsDataURL(file);fileInput.value=''});
+fileInput.addEventListener('change',e=>{const file=e.target.files&&e.target.files[0];if(!file)return;if(!file.type.startsWith('image/')){alert('Please choose an image file.');return}const reader=new FileReader();reader.onload=ev=>{const img=new Image();img.onload=()=>{originalImage=img;previewImg.src=ev.target.result;currentFilter='none';previewImg.style.filter='none';canvasContainer.classList.remove('transparent');bgBackup=null;mainContent.style.display='none';editorScreen.style.display='block';hideAllPanels();setTimeout(setupCanvas,80);window.scrollTo({top:0,behavior:'smooth'})};img.onerror=()=>alert('This image could not be opened. Please try another image.');img.src=ev.target.result};reader.readAsDataURL(file);fileInput.value=''});
 document.getElementById('back-btn').addEventListener('click',()=>{editorScreen.style.display='none';mainContent.style.display='block';window.scrollTo({top:0,behavior:'smooth'})});
 function setupCanvas(){const r=canvasContainer.getBoundingClientRect(),dpr=Math.max(1,window.devicePixelRatio||1);brushCanvas.width=Math.round(r.width*dpr);brushCanvas.height=Math.round(r.height*dpr);brushCanvas.style.width=r.width+'px';brushCanvas.style.height=r.height+'px';brushCtx.setTransform(dpr,0,0,dpr,0,0);brushCtx.lineCap='round';brushCtx.lineJoin='round'}
 window.addEventListener('resize',()=>{if(editorScreen.style.display==='block')setupCanvas()});
 
 /* Panel management */
-const panels=['crop-panel','brush-panel','text-panel','background-panel'],cropOverlay=document.getElementById('crop-overlay');
+const panels=['crop-panel','brush-panel','text-panel','background-panel','ai-bg-panel'],cropOverlay=document.getElementById('crop-overlay');
 function hideAllPanels(){panels.forEach(id=>document.getElementById(id).style.display='none');document.querySelectorAll('.tool-btn').forEach(b=>b.classList.remove('active'));cropOverlay.style.display='none';brushCanvas.style.pointerEvents='none';brushActive=false}
 function showPanel(id,button){hideAllPanels();document.getElementById(id).style.display='block';if(button)button.classList.add('active')}
 function getImageBox(){const c=canvasContainer.getBoundingClientRect(),i=previewImg.getBoundingClientRect();return{x:i.left-c.left,y:i.top-c.top,w:i.width,h:i.height}}
@@ -157,36 +199,144 @@ const textLayer=document.getElementById('text-layer'),textInput=document.getElem
 document.getElementById('text-btn').addEventListener('click',()=>{showPanel('text-panel',document.getElementById('text-btn'));if(!selectedTextId)textInput.value='Enter Text'});
 document.getElementById('color-list').addEventListener('click',e=>{const dot=e.target.closest('.color-dot');if(!dot)return;textColor=dot.dataset.color;document.querySelectorAll('.color-dot').forEach(d=>d.classList.toggle('selected',d===dot))});
 document.getElementById('thin-text').addEventListener('click',()=>textWeight=300);document.getElementById('thick-text').addEventListener('click',()=>textWeight=800);
-document.getElementById('add-text').addEventListener('click',()=>{const value=textInput.value.trim();if(!value){alert('আগে কিছু লেখা লিখুন।');return}if(selectedTextId){const item=textItems.find(t=>t.id===selectedTextId);if(item){item.text=value;item.color=textColor;item.weight=textWeight;item.size=textFontSize}}else{const item={id:nextTextId++,text:value,color:textColor,weight:textWeight,size:textFontSize,x:50,y:50};textItems.push(item);selectedTextId=item.id}renderTexts()});
+document.getElementById('add-text').addEventListener('click',()=>{const value=textInput.value.trim();if(!value){alert('Please enter some text first.');return}if(selectedTextId){const item=textItems.find(t=>t.id===selectedTextId);if(item){item.text=value;item.color=textColor;item.weight=textWeight;item.size=textFontSize}}else{const item={id:nextTextId++,text:value,color:textColor,weight:textWeight,size:textFontSize,x:50,y:50};textItems.push(item);selectedTextId=item.id}renderTexts()});
 document.getElementById('close-text').addEventListener('click',()=>{document.getElementById('text-panel').style.display='none';document.getElementById('text-btn').classList.remove('active')});
 function renderTexts(){textLayer.innerHTML='';textItems.forEach(item=>{const el=document.createElement('div');el.className='text-item'+(item.id===selectedTextId?' selected':'');el.textContent=item.text;el.style.left=item.x+'%';el.style.top=item.y+'%';el.style.color=item.color;el.style.fontWeight=item.weight;el.style.fontSize=item.size+'px';el.dataset.id=item.id;el.addEventListener('pointerdown',e=>{selectedTextId=item.id;dragText={id:item.id,startX:e.clientX,startY:e.clientY,x:item.x,y:item.y};el.setPointerCapture(e.pointerId);renderTexts();e.preventDefault()});el.addEventListener('pointermove',e=>{if(!dragText||dragText.id!==item.id)return;const r=canvasContainer.getBoundingClientRect();item.x=Math.max(3,Math.min(97,dragText.x+(e.clientX-dragText.startX)/r.width*100));item.y=Math.max(3,Math.min(97,dragText.y+(e.clientY-dragText.startY)/r.height*100));el.style.left=item.x+'%';el.style.top=item.y+'%'});el.addEventListener('pointerup',()=>dragText=null);el.addEventListener('pointercancel',()=>dragText=null);textLayer.appendChild(el)});const list=document.getElementById('text-list');list.innerHTML='';textItems.forEach(item=>{const chip=document.createElement('div');chip.className='text-chip';const label=document.createElement('span');label.textContent=item.text.slice(0,18);chip.appendChild(label);const edit=document.createElement('button');edit.innerHTML='<i class="fa-solid fa-pen"></i>';edit.title='Edit text';edit.addEventListener('click',()=>{selectedTextId=item.id;textInput.value=item.text;textColor=item.color;textWeight=item.weight;renderTexts()});const del=document.createElement('button');del.innerHTML='<i class="fa-solid fa-trash"></i>';del.title='Delete text';del.addEventListener('click',()=>{textItems=textItems.filter(t=>t.id!==item.id);if(selectedTextId===item.id)selectedTextId=null;renderTexts()});chip.append(edit,del);list.appendChild(chip)})}
 
-/* Background removal (runs inside the browser, no API key needed) */
-let bgBackup=null,bgBusy=false,bgLib=null;
-const bgStatus=document.getElementById('bg-status'),busyOverlay=document.getElementById('busy-overlay'),busyText=document.getElementById('busy-text'),progressBar=document.getElementById('progress-bar');
-function setBusy(on,text){busyOverlay.classList.toggle('show',on);if(text)busyText.textContent=text;if(!on)progressBar.style.width='0'}
+/* Background removal: real AI processing through the server endpoint /api/remove-background */
+let bgBackup=null,bgBusy=false,bgJob=0,bgXhr=null,fxRaf=0,pillTimer=0;
+const bgStatus=document.getElementById('bg-status'),aiFx=document.getElementById('ai-fx'),fxCtx=aiFx.getContext('2d'),aiStatus=document.getElementById('ai-status'),aiStatusText=document.getElementById('ai-status-text'),aiBar=document.getElementById('ai-bar'),aiBarFill=document.getElementById('ai-bar-fill'),bgRunBtn=document.getElementById('bg-run');
+const MAX_UPLOAD=9*1024*1024;
 function bgMessage(text,cls){bgStatus.textContent=text;bgStatus.className='status-note'+(cls?' '+cls:'')}
-async function loadBgLib(){if(bgLib)return bgLib;bgLib=await import('https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.5.5/+esm');return bgLib}
-async function runBackgroundRemoval(){
- if(!originalImage||bgBusy)return;bgBusy=true;
- const runBtn=document.getElementById('bg-run');runBtn.disabled=true;
+function showPill(text,mode){clearTimeout(pillTimer);aiStatusText.textContent=text;aiStatus.className='show'+(mode==='err'?' err':'')}
+function hidePill(){clearTimeout(pillTimer);aiStatus.className=''}
+function setBar(f,indeterminate){aiBar.classList.toggle('indet',!!indeterminate);aiBarFill.style.width=indeterminate?'':Math.round(f*100)+'%'}
+function lockUI(on){document.querySelectorAll('#toolbar .tool-btn,#bg-run,#ai-bg-run,#blur-image,#reset-filter').forEach(b=>b.disabled=on);['bg-undo','ai-bg-undo'].forEach(id=>document.getElementById(id).disabled=on||!bgBackup)}
+const loadImg=u=>new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=()=>rej(new Error('The processed image could not be displayed.'));i.src=u});
+
+/* Subtle AI scanning effect: tiny shimmering lines and particles over the whole image */
+function startFx(){
+ stopFx();
+ const bx=getImageBox(),dpr=Math.min(2,window.devicePixelRatio||1),W=Math.max(1,bx.w),H=Math.max(1,bx.h);
+ Object.assign(aiFx.style,{left:bx.x+'px',top:bx.y+'px',width:W+'px',height:H+'px',display:'block'});
+ aiFx.width=Math.round(W*dpr);aiFx.height=Math.round(H*dpr);fxCtx.setTransform(dpr,0,0,dpr,0,0);
+ const n=Math.round(Math.min(70,Math.max(28,W*H/9000)));
+ const parts=Array.from({length:n},()=>({x:Math.random()*W,y:Math.random()*H,r:.6+Math.random()*1.3,vx:10+Math.random()*30,vy:(Math.random()-.5)*8,ph:Math.random()*6.28,sp:1.5+Math.random()*2.5}));
+ const lines=Array.from({length:8},()=>({x:Math.random()*W,y:Math.random()*H,len:40+Math.random()*90,vx:45+Math.random()*90,a:.2+Math.random()*.3}));
+ let last=performance.now();const t0=last;
+ function frame(now){
+  const dt=Math.min(.05,(now-last)/1000);last=now;fxCtx.clearRect(0,0,W,H);
+  const band=((now-t0)/1000*W*.32)%(W+200)-100,g=fxCtx.createLinearGradient(band-90,0,band+90,0);
+  g.addColorStop(0,'rgba(255,255,255,0)');g.addColorStop(.5,'rgba(255,255,255,.07)');g.addColorStop(1,'rgba(255,255,255,0)');
+  fxCtx.fillStyle=g;fxCtx.fillRect(band-90,0,180,H);
+  for(const l of lines){l.x+=l.vx*dt;if(l.x>W+l.len){l.x=-l.len;l.y=Math.random()*H}
+   const lg=fxCtx.createLinearGradient(l.x,0,l.x+l.len,0);lg.addColorStop(0,'rgba(255,255,255,0)');lg.addColorStop(.5,'rgba(255,255,255,'+l.a+')');lg.addColorStop(1,'rgba(255,255,255,0)');
+   fxCtx.fillStyle=lg;fxCtx.fillRect(l.x,l.y,l.len,1.2)}
+  for(const p of parts){p.x+=p.vx*dt;p.y+=p.vy*dt;if(p.x>W+4)p.x=-4;if(p.y<-4)p.y=H+4;if(p.y>H+4)p.y=-4;
+   const al=.2+.6*(.5+.5*Math.sin(now/1000*p.sp+p.ph));fxCtx.fillStyle='rgba(255,255,255,'+al.toFixed(3)+')';fxCtx.beginPath();fxCtx.arc(p.x,p.y,p.r,0,6.2832);fxCtx.fill()}
+  fxRaf=requestAnimationFrame(frame)}
+ fxRaf=requestAnimationFrame(frame)}
+function stopFx(){if(fxRaf)cancelAnimationFrame(fxRaf);fxRaf=0;aiFx.style.display='none';fxCtx.setTransform(1,0,0,1,0,0);fxCtx.clearRect(0,0,aiFx.width,aiFx.height)}
+window.addEventListener('resize',()=>{if(bgBusy&&fxRaf)startFx()});
+
+/* Prepare the image that is sent to the AI (original file when possible; re-encoded only if too large) */
+async function prepareUpload(){
+ const blob=await (await fetch(previewImg.src)).blob();
+ if(blob.size<=MAX_UPLOAD&&/^image\/(png|jpe?g|webp)$/.test(blob.type))return blob;
+ const w=originalImage.naturalWidth,h=originalImage.naturalHeight;let scale=1,out=null;
+ for(let i=0;i<6&&(!out||out.size>MAX_UPLOAD);i++){
+  const c=document.createElement('canvas');c.width=Math.max(1,Math.round(w*scale));c.height=Math.max(1,Math.round(h*scale));
+  const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(originalImage,0,0,c.width,c.height);
+  out=await new Promise(r=>c.toBlob(r,'image/jpeg',.92));scale*=.75}
+ if(!out)throw new Error('The image could not be prepared for upload.');
+ return out}
+
+/* Real request to the server (OpenAI image model), with upload progress */
+function requestAI(endpoint,blob,prompt,onUpload){
+ return new Promise((resolve,reject)=>{
+  const xhr=new XMLHttpRequest();bgXhr=xhr;
+  xhr.open('POST',API_BASE+endpoint);xhr.responseType='blob';xhr.timeout=180000;
+  xhr.upload.onprogress=e=>{if(e.lengthComputable)onUpload(e.loaded/e.total)};
+  xhr.upload.onload=()=>onUpload(1);
+  xhr.onload=async()=>{
+   if(xhr.status===200&&xhr.response&&/image\/png/.test(xhr.response.type)){resolve(xhr.response);return}
+   let msg='';try{msg=JSON.parse(await xhr.response.text()).error||''}catch(_){}
+   if(!msg&&(xhr.status===404||xhr.status===405))msg='The AI endpoint was not found. Please start the Pixelora server (npm start) and open the site through it.';
+   reject(new Error(msg||'The AI server returned an error ('+xhr.status+').'))};
+  xhr.onerror=()=>reject(new Error('Could not reach the AI server. Check your connection and make sure the Pixelora server is running.'));
+  xhr.ontimeout=()=>reject(new Error('The AI server took too long to respond. Please try again.'));
+  xhr.onabort=()=>reject(Object.assign(new Error('Cancelled'),{aborted:true}));
+  const fd=new FormData();fd.append('image',blob,'photo.'+(blob.type==='image/png'?'png':blob.type==='image/webp'?'webp':'jpg'));if(prompt)fd.append('prompt',prompt);xhr.send(fd)})}
+
+/* Reveal animation: a vertical scan line moves right -> left and uncovers the real AI result behind it */
+function revealResult(url){
+ return new Promise(resolve=>{
+  const bx=getImageBox(),wrap=document.createElement('div');wrap.id='reveal-wrap';
+  Object.assign(wrap.style,{left:bx.x+'px',top:bx.y+'px',width:bx.w+'px',height:bx.h+'px'});
+  const layer=document.createElement('div');layer.className='reveal-layer';
+  layer.style.backgroundPosition=[[0,0],[0,10],[10,-10],[-10,0]].map(p=>(p[0]-bx.x)+'px '+(p[1]-bx.y)+'px').join(',');
+  const im=document.createElement('img');im.alt='';im.draggable=false;im.src=url;layer.appendChild(im);
+  const line=document.createElement('div');line.className='reveal-line';wrap.append(layer,line);canvasContainer.appendChild(wrap);
+  layer.style.clipPath='inset(0 0 0 100%)';line.style.left='100%';
+  const D=1500,t0=performance.now();
+  function step(now){
+   if(!wrap.isConnected){resolve(null);return}
+   const k=Math.min(1,(now-t0)/D),e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2,x=100-e*100;
+   layer.style.clipPath='inset(0 0 0 '+x+'%)';line.style.left=x+'%';
+   if(k<1)requestAnimationFrame(step);else{line.style.opacity='0';resolve(wrap)}}
+  requestAnimationFrame(step)})}
+
+const aiBgStatus=document.getElementById('ai-bg-status'),aiBgPrompt=document.getElementById('ai-bg-prompt'),aiBgRunBtn=document.getElementById('ai-bg-run'),aiBgUndoBtn=document.getElementById('ai-bg-undo');
+function setStatus(el,text,cls){el.textContent=text;el.className='status-note'+(cls?' '+cls:'')}
+function syncUndo(){const d=bgBusy||!bgBackup;document.getElementById('bg-undo').disabled=d;aiBgUndoBtn.disabled=d}
+
+function cancelBackgroundRemoval(){
+ if(!bgBusy)return;bgJob++;
+ if(bgXhr){try{bgXhr.abort()}catch(_){}bgXhr=null}
+ stopFx();hidePill();const w=document.getElementById('reveal-wrap');if(w)w.remove();
+ lockUI(false);bgBusy=false;bgRunBtn.textContent='Remove background';aiBgRunBtn.textContent='Generate background'}
+
+/* mode 'remove' = Background removal (transparent PNG), mode 'bg' = AI Background (new background from the prompt) */
+async function runAI(mode){
+ if(!originalImage||bgBusy)return;
+ const isBg=mode==='bg',statusEl=isBg?aiBgStatus:bgStatus,runBtn=isBg?aiBgRunBtn:bgRunBtn,idle=isBg?'Generate background':'Remove background';
+ let prompt='';
+ if(isBg){prompt=aiBgPrompt.value.trim();if(prompt.length<3){setStatus(statusEl,'Please describe the new background first.','err');return}}
+ else if(bgBackup&&canvasContainer.classList.contains('transparent')){setStatus(statusEl,'The background has already been removed. Use Undo to go back to the previous image.');return}
+ bgBusy=true;const job=++bgJob;lockUI(true);
+ const working=isBg?'AI is creating the new background...':'AI is removing the background...';
+ setStatus(statusEl,'Processing... please keep this tab open. This can take up to a minute.');
+ showPill('Preparing image...');setBar(0,false);startFx();
  try{
-  setBusy(true,'AI মডেল লোড হচ্ছে (প্রথমবার একটু সময় লাগবে)...');bgMessage('প্রসেস চলছে... ট্যাব বন্ধ করবেন না।');
-  const lib=await loadBgLib();
-  const src=previewImg.src;const blob=await (await fetch(src)).blob();
-  const small=window.innerWidth<700;
-  const result=await lib.removeBackground(blob,{model:small?'isnet_quint8':'isnet_fp16',output:{format:'image/png',quality:1},progress:(key,cur,total)=>{const p=total?Math.round(cur/total*100):0;progressBar.style.width=p+'%';busyText.textContent=String(key).includes('fetch')?'মডেল ডাউনলোড হচ্ছে... '+p+'%':'ব্যাকগ্রাউন্ড সরানো হচ্ছে...'}});
-  const url=URL.createObjectURL(result);const img=new Image();
-  await new Promise((res,rej)=>{img.onload=res;img.onerror=rej;img.src=url});
-  bgBackup={img:originalImage,src:src};originalImage=img;previewImg.src=url;previewImg.style.filter='none';currentFilter='none';
-  canvasContainer.classList.add('transparent');document.getElementById('bg-undo').disabled=false;
-  setTimeout(setupCanvas,50);bgMessage('ব্যাকগ্রাউন্ড সফলভাবে মুছে গেছে। এখন Download PNG চাপলে স্বচ্ছ (transparent) ছবি পাবেন।','ok');
- }catch(err){console.error(err);bgMessage('ব্যাকগ্রাউন্ড মোছা যায়নি। ইন্টারনেট সংযোগ ঠিক আছে কিনা দেখে আবার চেষ্টা করুন।','err')}
- finally{setBusy(false);runBtn.disabled=false;bgBusy=false}
+  const blob=await prepareUpload();if(job!==bgJob)return;
+  showPill('Uploading image... 0%');
+  const out=await requestAI(isBg?'/api/ai-background':'/api/remove-background',blob,prompt,f=>{if(job!==bgJob)return;if(f<1){showPill('Uploading image... '+Math.round(f*100)+'%');setBar(f,false)}else{showPill(working);setBar(0,true)}});
+  bgXhr=null;if(job!==bgJob)return;
+  const srcImg=originalImage,srcUrl=previewImg.src,url=URL.createObjectURL(out),rimg=await loadImg(url);if(job!==bgJob)return;
+  stopFx();hidePill();
+  const wrap=await revealResult(url);if(job!==bgJob||!wrap)return;
+  bgBackup={img:srcImg,src:srcUrl};originalImage=rimg;previewImg.src=url;previewImg.style.filter='none';currentFilter='none';
+  try{await previewImg.decode()}catch(_){}
+  canvasContainer.classList.toggle('transparent',!isBg);wrap.remove();setTimeout(setupCanvas,50);
+  runBtn.textContent=idle;
+  setStatus(statusEl,isBg?'New background created. Press Download PNG to save the image.':'Background removed successfully. Press Download PNG to save the transparent image.','ok');
+ }catch(err){
+  if((err&&err.aborted)||job!==bgJob)return;
+  console.error(err);const m=(err&&err.message)||'The AI request failed.';
+  setStatus(statusEl,m+' Please try again.','err');runBtn.textContent='Retry';
+  stopFx();showPill(m,'err');pillTimer=setTimeout(hidePill,5000);
+ }finally{
+  if(job===bgJob){stopFx();bgXhr=null;bgBusy=false;lockUI(false)}
+ }
 }
-document.getElementById('background-btn').addEventListener('click',()=>{if(!originalImage)return;showPanel('background-panel',document.getElementById('background-btn'));runBackgroundRemoval()});
-document.getElementById('bg-run').addEventListener('click',runBackgroundRemoval);
-document.getElementById('bg-undo').addEventListener('click',()=>{if(!bgBackup)return;originalImage=bgBackup.img;previewImg.src=bgBackup.src;bgBackup=null;canvasContainer.classList.remove('transparent');document.getElementById('bg-undo').disabled=true;bgMessage('আগের ছবি ফিরিয়ে আনা হয়েছে।');setTimeout(setupCanvas,50)});
+document.getElementById('background-btn').addEventListener('click',()=>{if(!originalImage)return;showPanel('background-panel',document.getElementById('background-btn'));runAI('remove')});
+bgRunBtn.addEventListener('click',()=>runAI('remove'));
+document.getElementById('ai-bg-btn').addEventListener('click',()=>{if(!originalImage)return;showPanel('ai-bg-panel',document.getElementById('ai-bg-btn'))});
+aiBgRunBtn.addEventListener('click',()=>runAI('bg'));
+aiBgUndoBtn.addEventListener('click',()=>{if(!bgBackup||bgBusy)return;originalImage=bgBackup.img;previewImg.src=bgBackup.src;bgBackup=null;canvasContainer.classList.remove('transparent');setStatus(aiBgStatus,'Previous image restored.');syncUndo();setTimeout(setupCanvas,50)});
+document.getElementById('bg-undo').addEventListener('click',()=>setTimeout(syncUndo,0));
+document.getElementById('back-btn').addEventListener('click',cancelBackgroundRemoval);
+document.getElementById('bg-undo').addEventListener('click',()=>{if(!bgBackup)return;originalImage=bgBackup.img;previewImg.src=bgBackup.src;bgBackup=null;canvasContainer.classList.remove('transparent');document.getElementById('bg-undo').disabled=true;bgMessage('Previous image restored.');setTimeout(setupCanvas,50)});
 document.getElementById('blur-image').addEventListener('click',()=>{currentFilter='blur(3px)';previewImg.style.filter=currentFilter});
 document.getElementById('reset-filter').addEventListener('click',()=>{currentFilter='none';previewImg.style.filter='none'});
 function replaceImageFromCanvas(c){const img=new Image();img.onload=()=>{originalImage=img;previewImg.src=c.toDataURL('image/png');previewImg.style.filter='none';currentFilter='none';setTimeout(setupCanvas,50)};img.src=c.toDataURL('image/png')}
@@ -212,19 +362,26 @@ SAMPLES.forEach(s=>{const b=document.createElement('button');b.type='button';b.c
 async function openSample(s){msg.textContent='';try{const r=await fetch(U(s[1],1200));if(!r.ok)throw 0;const blob=await r.blob(),dt=new DataTransfer();dt.items.add(new File([blob],'sample.jpg',{type:blob.type||'image/jpeg'}));fileInput.files=dt.files;fileInput.dispatchEvent(new Event('change'))}catch(e){msg.textContent='This sample could not be loaded. Please check your connection and try again.'}}
 
 /* Slider */
-function setPos(p){p=Math.max(0,Math.min(100,p));cmp.style.setProperty('--pos',p+'%');handle.setAttribute('aria-valuenow',Math.round(p))}
+let curPos=50;function setPos(p){p=Math.max(0,Math.min(100,p));curPos=p;cmp.style.setProperty('--pos',p+'%');handle.setAttribute('aria-valuenow',Math.round(p))}
 function fromX(x){const r=cmp.getBoundingClientRect();setPos((x-r.left)/r.width*100)}
-let drag=false;cmp.addEventListener('pointerdown',e=>{drag=true;cmp.setPointerCapture(e.pointerId);fromX(e.clientX)});cmp.addEventListener('pointermove',e=>{if(drag)fromX(e.clientX)});['pointerup','pointercancel'].forEach(n=>cmp.addEventListener(n,()=>drag=false));
+let drag=false,grab=0;
+cmp.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse'&&e.button!==0)return;if(e.target.closest&&e.target.closest('.pxs-note.err'))return;drag=true;try{cmp.setPointerCapture(e.pointerId)}catch(_){}const r=cmp.getBoundingClientRect(),p=(e.clientX-r.left)/r.width*100;grab=(e.target.closest&&e.target.closest('.pxs-handle'))?curPos-p:0;setPos(p+grab);e.preventDefault()});
+cmp.addEventListener('pointermove',e=>{if(!drag)return;const r=cmp.getBoundingClientRect();setPos((e.clientX-r.left)/r.width*100+grab)});
+['pointerup','pointercancel','lostpointercapture'].forEach(n=>cmp.addEventListener(n,()=>drag=false));
+cmp.addEventListener('dragstart',e=>e.preventDefault());
 handle.addEventListener('keydown',e=>{const v=Number(handle.getAttribute('aria-valuenow'));if(e.key==='ArrowLeft'){setPos(v-5);e.preventDefault()}if(e.key==='ArrowRight'){setPos(v+5);e.preventDefault()}});
 
 /* Category tabs and comparison images */
 function moveInd(){const on=tabs.querySelector('.pxs-tab.on');ind.style.width=on.offsetWidth+'px';ind.style.transform='translateX('+on.offsetLeft+'px)'}
-async function cutout(it){if(gen[it[1]])return gen[it[1]];const lib=await loadBgLib(),blob=await (await fetch(U(it[1],1000))).blob(),out=await lib.removeBackground(blob,{model:window.innerWidth<700?'isnet_quint8':'isnet_fp16',output:{format:'image/png',quality:1}});return gen[it[1]]=URL.createObjectURL(out)}
-function show(c,i){cat=c;idx=i;const it=DATA[c][i],my=++token;tabs.querySelectorAll('.pxs-tab').forEach(b=>{const on=b.dataset.cat===c;b.classList.toggle('on',on);b.setAttribute('aria-selected',on)});moveInd();setPos(50);note.classList.remove('show');
+const pend={};
+/* Transparent cut-out for an example photo, produced by the AI server (cached on the server after the first request) */
+function cutout(it){if(gen[it[1]])return Promise.resolve(gen[it[1]]);if(pend[it[1]])return pend[it[1]];
+ return pend[it[1]]=fetch(API_BASE+'/api/example-cutout/'+encodeURIComponent(it[1])).then(async r=>{if(!r.ok)throw new Error('cutout failed');const b=await r.blob();if(!/^image\//.test(b.type))throw new Error('bad response');return gen[it[1]]=URL.createObjectURL(b)}).finally(()=>{delete pend[it[1]]})}
+function show(c,i){cat=c;idx=i;const it=DATA[c][i],my=++token;tabs.querySelectorAll('.pxs-tab').forEach(b=>{const on=b.dataset.cat===c;b.classList.toggle('on',on);b.setAttribute('aria-selected',on)});moveInd();setPos(50);note.textContent='Preparing transparent preview...';note.classList.remove('show','err');
  imgB.alt='Original '+it[0].toLowerCase()+' with background';imgB.src=U(it[1],1000);imgA.alt='Edited '+it[0].toLowerCase()+' with transparent background';
- imgA.onerror=async()=>{imgA.onerror=null;if(my!==token)return;note.classList.add('show');try{const u=await cutout(it);if(my===token){imgA.src=u;note.classList.remove('show')}}catch(e){if(my===token)note.textContent='Transparent preview unavailable offline.'}};
+ imgA.onerror=async()=>{imgA.onerror=null;if(my!==token)return;note.classList.add('show');try{const u=await cutout(it);if(my===token){imgA.src=u;note.classList.remove('show')}}catch(e){if(my===token){note.textContent='Could not create the transparent preview. Tap to retry.';note.classList.add('err')}}};
  imgA.src=gen[it[1]]||it[2]}
-tabs.addEventListener('click',e=>{const b=e.target.closest('.pxs-tab');if(b)show(b.dataset.cat,0)});window.addEventListener('resize',moveInd);
+tabs.addEventListener('click',e=>{const b=e.target.closest('.pxs-tab');if(b)show(b.dataset.cat,0)});window.addEventListener('resize',moveInd);note.addEventListener('click',()=>{if(note.classList.contains('err'))show(cat,idx)});
 
 /* Modal: Terms, Privacy and gallery */
 function openModal(title,html){lastFocus=document.activeElement;$('pxs-mtitle').textContent=title;mbody.innerHTML=html;mbody.scrollTop=0;modal.classList.add('open');modal.setAttribute('aria-hidden','false');$('pxs-close').focus()}
